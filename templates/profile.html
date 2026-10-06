@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}My profile - Prepwise{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><div class="eyebrow">YOUR ACCOUNT</div><h1>My profile</h1><p class="muted">Add a few details to personalize your preparation space.</p></div>
+  <form method="post" action="{{ url_for('logout') }}"><button class="btn btn-outline-secondary">Log out</button></form>
+</div>
+<div class="profile-layout">
+  <section class="panel profile-card">
+    <div class="profile-avatar">{{ current_user.name[:1]|upper }}</div>
+    <h2>{{ current_user.name }}</h2>
+    <p class="muted">{{ current_user.email }}</p>
+    <span class="tag">GATE DA aspirant</span>
+  </section>
+  <section class="panel profile-form-panel">
+    <div class="panel-heading"><div><h2>Basic information</h2><p>Your email is used for sign-in and can’t be changed here.</p></div></div>
+    <form method="post" class="form-stack">
+      <label>Full name<input class="form-control" name="name" value="{{ current_user.name }}" required maxlength="80" autocomplete="name"></label>
+      <label>Email address<input class="form-control" value="{{ current_user.email }}" readonly></label>
+      <div class="form-row">
+        <label>GATE DA exam year<select class="form-select" name="exam_year"><option value="">Choose year</option>{% for year in range(2026, 2041) %}<option value="{{ year }}" {% if current_user.exam_year == year %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></label>
+        <label>Daily study goal (hours)<input class="form-control" type="number" name="daily_goal_hours" min="0.5" max="16" step="0.5" value="{{ current_user.daily_goal_minutes / 60 }}" required></label>
+      </div>
+      <label>College or institution <span class="muted">(optional)</span><input class="form-control" name="college" value="{{ current_user.college }}" maxlength="160" autocomplete="organization"></label>
+      <label>Course or current study <span class="muted">(optional)</span><input class="form-control" name="course" value="{{ current_user.course }}" maxlength="120" placeholder="e.g. B.Tech Computer Science"></label>
+      <button class="btn btn-primary">Save profile</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

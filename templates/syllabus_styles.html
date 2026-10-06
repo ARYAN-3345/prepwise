@@ -1,0 +1,17 @@
+<style>
+.subject-picker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.subject-picker-card{padding:18px;text-decoration:none;color:var(--ink);transition:transform .15s ease,box-shadow .15s ease}
+.subject-picker-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px #29234d12;color:var(--ink)}
+.subject-picker-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.subject-picker-card h2{font-size:14px;min-height:38px;line-height:1.4}
+.subject-picker-card .subject-progress{height:5px;margin:13px 0 10px}
+.subject-prompt{font-size:10px;color:var(--purple);font-weight:600}
+.syllabus-detail{padding:8px 20px}
+.syllabus-detail .topic-row{grid-template-columns:1fr 130px;padding:17px 0}
+.syllabus-detail .topic-row strong{font-size:15px}
+.syllabus-detail .topic-row small{font-size:12px;margin-top:5px}
+.syllabus-detail .topic-row .form-select-sm{font-size:13px;min-height:40px}
+.progress-form select:disabled{opacity:.7}
+@media(max-width:900px){.subject-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.subject-picker-grid{grid-template-columns:1fr}}
+</style>

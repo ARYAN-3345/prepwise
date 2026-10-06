@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Welcome - Prepwise{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-brand"><span class="brand-mark">P</span> prepwise<span class="brand-dot">.</span></div>
+  <div class="auth-card">
+    <div class="eyebrow">GATE DA PREPARATION</div>
+    <h1>{{ 'Welcome back' if mode == 'login' else 'Build your study rhythm' }}</h1>
+    <p class="muted">{{ 'Pick up where your preparation left off.' if mode == 'login' else 'Create your account and start tracking progress.' }}</p>
+    <form method="post" class="form-stack">
+      {% if mode == 'register' %}<label>Your name<input class="form-control" name="name" required maxlength="80" autocomplete="name"></label>{% endif %}
+      <label>Email address<input class="form-control" name="email" type="email" required autocomplete="email"></label>
+      <label>Password<span class="password-field"><input class="form-control" id="authPassword" name="password" type="password" required minlength="8" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}"><button class="password-toggle" type="button" data-password-toggle="authPassword" aria-label="Show password" aria-pressed="false" title="Show password"><svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span></label>
+      <input type="hidden" name="mode" value="{{ mode }}">
+      <button class="btn btn-primary w-100">{{ 'Sign in' if mode == 'login' else 'Create account' }}</button>
+    </form>
+    {% if google_login_enabled %}<div class="auth-divider"><span>or</span></div><a class="btn btn-google w-100" href="{{ url_for('google_login') }}"><span class="google-g" aria-hidden="true">G</span>Continue with Google</a>{% endif %}
+    <div class="auth-switch">{{ 'New to Prepwise?' if mode == 'login' else 'Already have an account?' }} <a href="{{ url_for('auth', mode='register' if mode == 'login' else 'login') }}">{{ 'Create an account' if mode == 'login' else 'Sign in' }}</a></div>
+    <div class="auth-switch">Just browsing? <a href="{{ url_for('resources_page') }}">Explore the shared resource library</a></div>
+  </div>
+  <div class="auth-foot">A calmer way to make progress, one session at a time.</div>
+</div>
+{% endblock %}
