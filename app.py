@@ -507,9 +507,11 @@ def create_app(config_object=Config):
                 if resource_type not in {"notes", "formula", "book"}:
                     abort(400)
                 subject_name = request.form.get("subject_name", "").strip()
-                if subject_name not in available_subjects:
+                if resource_type != "book" and subject_name not in available_subjects:
                     flash("Choose a subject folder for this resource.", "danger")
                     return redirect(url_for("resources_page", collection="subjects"))
+                if resource_type == "book":
+                    subject_name = None
                 try:
                     allowed = {".pdf"} if resource_type == "book" else {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
                     key, filename = save_upload(file, allowed_extensions=allowed, category="books" if resource_type == "book" else "resources")
@@ -520,7 +522,7 @@ def create_app(config_object=Config):
                     db.session.add(Resource(user_id=current_user.id, subject_name=subject_name, title=request.form.get("title", "").strip()[:160] or filename, description=request.form.get("description", "")[:500], original_filename=filename, storage_key=key, resource_type=resource_type))
                     db.session.commit()
                     flash("Resource uploaded and shared with the community.", "success")
-                    return redirect(url_for("resources_page"))
+                    return redirect(url_for("resources_page", collection="books") if resource_type == "book" else url_for("resources_page"))
         items = Resource.query.order_by(Resource.created_at.desc()).all()
         links = {item.id: upload_url(item.storage_key) for item in items}
         books = [item for item in items if item.resource_type == "book"]
