@@ -63,6 +63,8 @@ class StudySession(db.Model):
     topic = db.relationship("Topic")
     started_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     ended_at = db.Column(db.DateTime(timezone=True))
+    paused_at = db.Column(db.DateTime(timezone=True))
+    total_paused_seconds = db.Column(db.Integer, default=0, nullable=False)
     duration_minutes = db.Column(db.Integer, default=0, nullable=False)
     duration_seconds = db.Column(db.Integer, default=0, nullable=False)
     notes = db.Column(db.String(500), default="")

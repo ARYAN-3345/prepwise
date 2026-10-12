@@ -2,6 +2,7 @@ import calendar as month_calendar
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 import secrets
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_file, url_for
@@ -42,6 +43,8 @@ def create_app(config_object=Config):
     @app.context_processor
     def inject_active_study_timer():
         started_at = None
+        paused_at = None
+        total_paused_seconds = 0
         if current_user.is_authenticated:
             active_session = (StudySession.query
                               .filter_by(user_id=current_user.id, ended_at=None)
@@ -53,7 +56,15 @@ def create_app(config_object=Config):
                     started_at = started_at.replace(tzinfo=timezone.utc)
                 else:
                     started_at = started_at.astimezone(timezone.utc)
-        return {"active_study_started_at": started_at.isoformat() if started_at else ""}
+                paused_at = active_session.paused_at
+                if paused_at:
+                    paused_at = paused_at.replace(tzinfo=timezone.utc) if paused_at.tzinfo is None else paused_at.astimezone(timezone.utc)
+                total_paused_seconds = active_session.total_paused_seconds or 0
+        return {
+            "active_study_started_at": started_at.isoformat() if started_at else "",
+            "active_study_paused_at": paused_at.isoformat() if paused_at else "",
+            "active_study_paused_seconds": total_paused_seconds,
+        }
 
     @app.errorhandler(413)
     def upload_too_large(_error):
@@ -102,6 +113,12 @@ def create_app(config_object=Config):
         if "duration_seconds" not in study_columns:
             db.session.execute(text("ALTER TABLE study_session ADD COLUMN duration_seconds INTEGER NOT NULL DEFAULT 0"))
             db.session.execute(text("UPDATE study_session SET duration_seconds = duration_minutes * 60 WHERE duration_seconds = 0 AND duration_minutes > 0"))
+            db.session.commit()
+        if "paused_at" not in study_columns:
+            db.session.execute(text("ALTER TABLE study_session ADD COLUMN paused_at TIMESTAMP WITH TIME ZONE"))
+            db.session.commit()
+        if "total_paused_seconds" not in study_columns:
+            db.session.execute(text("ALTER TABLE study_session ADD COLUMN total_paused_seconds INTEGER NOT NULL DEFAULT 0"))
             db.session.commit()
         seed_syllabus()
 
@@ -255,11 +272,16 @@ def create_app(config_object=Config):
             test = next((m for m in mocks if m.test_date == day), None)
             chart["scores"].append(round(test.score / test.max_score * 100, 1) if test and test.max_score else None)
         active_session = StudySession.query.filter_by(user_id=current_user.id, ended_at=None).first()
+        gate_exam_date = date(2027, 2, 6)
+        gate_days_left = (gate_exam_date - datetime.now(ZoneInfo("Asia/Kolkata")).date()).days
         return render_template("dashboard.html", topics=all_topics, subjects=subjects, progress=progress,
                                completed=completed, total_topics=len(all_topics), today_minutes=today_minutes,
                                week_minutes=week_minutes, pyq_count=pyq_questions, accuracy=round(100 * pyq_correct / pyq_questions) if pyq_questions else 0,
                                mocks=mocks, chart=chart, active_session=active_session,
                                active_started_at=(active_session.started_at.astimezone(timezone.utc) if active_session.started_at.tzinfo else active_session.started_at.replace(tzinfo=timezone.utc)).isoformat() if active_session else None,
+                               active_paused_at=(active_session.paused_at.astimezone(timezone.utc) if active_session and active_session.paused_at and active_session.paused_at.tzinfo else active_session.paused_at.replace(tzinfo=timezone.utc) if active_session and active_session.paused_at else None),
+                               active_paused_seconds=(active_session.total_paused_seconds or 0) if active_session else 0,
+                               gate_exam_date=gate_exam_date, gate_days_left=gate_days_left,
                                open_mistakes=Mistake.query.filter_by(user_id=current_user.id, reviewed=False).count(), now=datetime.now)
 
     @app.get("/syllabus")
@@ -326,7 +348,13 @@ def create_app(config_object=Config):
             started_at = started_at.astimezone(timezone.utc)
         ended_at = datetime.now(timezone.utc)
         item.ended_at = ended_at
-        item.duration_seconds = max(0, int((ended_at - started_at).total_seconds()))
+        paused_seconds = item.total_paused_seconds or 0
+        if item.paused_at:
+            paused_at = item.paused_at.replace(tzinfo=timezone.utc) if item.paused_at.tzinfo is None else item.paused_at.astimezone(timezone.utc)
+            paused_seconds += max(0, int((ended_at - paused_at).total_seconds()))
+        item.total_paused_seconds = paused_seconds
+        item.paused_at = None
+        item.duration_seconds = max(0, int((ended_at - started_at).total_seconds()) - paused_seconds)
         item.duration_minutes = item.duration_seconds // 60
         item.notes = request.form.get("notes", "")[:500]
         db.session.commit()
@@ -336,6 +364,23 @@ def create_app(config_object=Config):
             duration_label = f"{item.duration_minutes // 60} hr {item.duration_minutes % 60} min"
         flash(f"Session saved: {duration_label}.", "success")
         return redirect(url_for("history"))
+
+    @app.post("/sessions/<int:session_id>/toggle-pause")
+    @login_required
+    def toggle_session_pause(session_id):
+        item = db.get_or_404(StudySession, session_id)
+        if item.user_id != current_user.id or item.ended_at is not None:
+            abort(404)
+        if item.paused_at:
+            paused_at = item.paused_at.replace(tzinfo=timezone.utc) if item.paused_at.tzinfo is None else item.paused_at.astimezone(timezone.utc)
+            item.total_paused_seconds = (item.total_paused_seconds or 0) + max(0, int((datetime.now(timezone.utc) - paused_at).total_seconds()))
+            item.paused_at = None
+            flash("Study timer resumed.", "success")
+        else:
+            item.paused_at = datetime.now(timezone.utc)
+            flash("Study timer paused.", "success")
+        db.session.commit()
+        return redirect(url_for("dashboard"))
 
     @app.post("/sessions/<int:session_id>/delete")
     @login_required
