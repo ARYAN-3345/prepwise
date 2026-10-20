@@ -13,4 +13,9 @@
 .mistake-images,.image-preview{display:flex;flex-wrap:wrap;gap:8px}
 .mistake-images img,.image-preview img{width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .image-preview:empty{display:none}
+.image-paste-zone{grid-column:1/-1;display:grid;gap:4px;padding:14px 16px;border:1px dashed var(--line);border-radius:10px;background:#faf9ff;color:var(--ink);cursor:text}
+.image-paste-zone span{font-size:11px;color:var(--muted)}
+.image-paste-zone:focus{outline:2px solid #7357df;outline-offset:2px}
+.image-paste-zone.is-dragging{border-color:#7357df;background:#f2efff}
+.image-paste-status{grid-column:1/-1;font-size:10px;margin:0}
 </style>

@@ -146,14 +146,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const imageInput = document.querySelector('input[name="images"]');
   const preview = document.querySelector('[data-image-preview]');
-  if (imageInput && preview) imageInput.addEventListener('change', () => {
-    preview.replaceChildren();
-    [...imageInput.files].forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      const image = document.createElement('img');
-      image.src = URL.createObjectURL(file);
-      image.alt = file.name;
-      preview.append(image);
+  const mistakeForm = imageInput?.form;
+  const pasteZone = document.querySelector('[data-image-paste-zone]');
+  const pasteStatus = document.querySelector('[data-image-paste-status]');
+  if (imageInput && preview && mistakeForm) {
+    const renderImagePreview = () => {
+      preview.querySelectorAll('img').forEach(image => URL.revokeObjectURL(image.src));
+      preview.replaceChildren();
+      [...imageInput.files].forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        const image = document.createElement('img');
+        image.src = URL.createObjectURL(file);
+        image.alt = file.name;
+        image.title = file.name;
+        preview.append(image);
+      });
+    };
+    imageInput.addEventListener('change', renderImagePreview);
+
+    const addPastedImages = files => {
+      const supported = files.filter(file => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type));
+      if (!supported.length) return false;
+      try {
+        const transfer = new DataTransfer();
+        [...imageInput.files].forEach(file => transfer.items.add(file));
+        supported.forEach((file, index) => {
+          const extension = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }[file.type];
+          transfer.items.add(new File([file], `mistake-snip-${Date.now()}-${index + 1}.${extension}`, { type: file.type }));
+        });
+        imageInput.files = transfer.files;
+        imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+        if (pasteStatus) pasteStatus.textContent = `${supported.length} screenshot${supported.length === 1 ? '' : 's'} added. Check the preview, then save your mistake.`;
+      } catch {
+        if (pasteStatus) pasteStatus.textContent = 'This browser could not attach the pasted screenshot. Use Choose File to select a saved image instead.';
+      }
+      return true;
+    };
+
+    document.addEventListener('paste', event => {
+      if (!mistakeForm.isConnected) return;
+      const items = [...(event.clipboardData?.items || [])];
+      const images = items.filter(item => item.kind === 'file' && item.type.startsWith('image/')).map(item => item.getAsFile()).filter(Boolean);
+      if (!images.length) return;
+      event.preventDefault();
+      addPastedImages(images);
     });
-  });
+
+    if (pasteZone) {
+      pasteZone.addEventListener('click', () => pasteZone.focus());
+      pasteZone.addEventListener('dragover', event => {
+        event.preventDefault();
+        pasteZone.classList.add('is-dragging');
+      });
+      pasteZone.addEventListener('dragleave', () => pasteZone.classList.remove('is-dragging'));
+      pasteZone.addEventListener('drop', event => {
+        event.preventDefault();
+        pasteZone.classList.remove('is-dragging');
+        addPastedImages([...event.dataTransfer.files]);
+      });
+    }
+  }
 });
