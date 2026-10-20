@@ -509,8 +509,8 @@ def create_app(config_object=Config):
                 db.session.add(MistakeImage(mistake_id=item.id, original_filename=filename, storage_key=key))
             db.session.commit()
             flash("Mistake added to your review book.", "success")
-            return redirect(url_for("mistakes_page"))
-        items = Mistake.query.filter_by(user_id=current_user.id).order_by(Mistake.reviewed, Mistake.created_at.desc()).all()
+            return redirect(url_for("mistakes_page") + "#mistake-list")
+        items = Mistake.query.filter_by(user_id=current_user.id).order_by(Mistake.created_at.desc(), Mistake.id.desc()).all()
         return render_template("mistakes.html", mistakes=items, topics=topics())
 
     @app.get("/mistake-images/<int:image_id>")
