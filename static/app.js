@@ -37,11 +37,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionId = document.body.dataset.activeStudyId;
     const pauseForm = document.querySelector('[data-session-pause-form]');
     let pauseRequestSent = false;
-    let lastTimerTick = Date.now();
+    let lastWallTick = Date.now();
+    let lastMonotonicTick = performance.now();
+    let hiddenSinceLastTick = document.hidden;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) hiddenSinceLastTick = true;
+    });
     const update = () => {
       const now = Date.now();
-      if (!document.hidden && now - lastTimerTick > 5000) autoPause(new Date(lastTimerTick));
-      lastTimerTick = now;
+      const monotonicNow = performance.now();
+      const previousWallTick = lastWallTick;
+      const wallElapsed = now - lastWallTick;
+      const monotonicElapsed = monotonicNow - lastMonotonicTick;
+      const stayedVisible = !document.hidden && !hiddenSinceLastTick;
+      lastWallTick = now;
+      lastMonotonicTick = monotonicNow;
+      hiddenSinceLastTick = document.hidden;
+      // A background tab's clocks advance together. A device suspend can make
+      // wall time jump ahead of the browser's monotonic clock, which indicates sleep.
+      // If the tab stayed visible throughout a long timer gap, that also points to sleep.
+      if (!document.hidden && (wallElapsed - monotonicElapsed > 5000 || (stayedVisible && wallElapsed > 5000))) {
+        autoPause(new Date(previousWallTick + Math.max(0, monotonicElapsed)));
+      }
       const pausedAtValue = timer?.dataset.pausedAt || document.body.dataset.activeStudyPausedAt;
       const pausedAt = pausedAtValue ? new Date(pausedAtValue).getTime() : Date.now();
       const pausedSeconds = Number(timer?.dataset.pausedSeconds || document.body.dataset.activeStudyPausedSeconds || 0);
@@ -71,11 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     update();
     setInterval(update, 1000);
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) autoPause();
-      else if (Date.now() - lastTimerTick > 5000) autoPause(new Date(lastTimerTick));
-    });
-    window.addEventListener('pagehide', autoPause);
   }
 
   const dateInput = document.querySelector('input[name="test_date"]');
