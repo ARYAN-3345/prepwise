@@ -34,7 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activeStudyStart) {
     const started = new Date(activeStudyStart);
     const normalTitle = document.title;
+    const sessionId = document.body.dataset.activeStudyId;
+    const pauseForm = document.querySelector('[data-session-pause-form]');
+    let pauseRequestSent = false;
+    let lastTimerTick = Date.now();
     const update = () => {
+      const now = Date.now();
+      if (!document.hidden && now - lastTimerTick > 5000) autoPause(new Date(lastTimerTick));
+      lastTimerTick = now;
       const pausedAtValue = timer?.dataset.pausedAt || document.body.dataset.activeStudyPausedAt;
       const pausedAt = pausedAtValue ? new Date(pausedAtValue).getTime() : Date.now();
       const pausedSeconds = Number(timer?.dataset.pausedSeconds || document.body.dataset.activeStudyPausedSeconds || 0);
@@ -44,8 +51,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (timer) timer.textContent = elapsed;
       document.title = `${elapsed} | ${normalTitle}`;
     };
+    const autoPause = (pauseTime = new Date()) => {
+      if (!sessionId || document.body.dataset.activeStudyPausedAt || pauseRequestSent) return;
+      pauseRequestSent = true;
+      const pausedAt = pauseTime.toISOString();
+      document.body.dataset.activeStudyPausedAt = pausedAt;
+      if (timer) timer.dataset.pausedAt = pausedAt;
+      const pauseButton = pauseForm?.querySelector('button');
+      if (pauseButton) pauseButton.textContent = 'Resume';
+      const sessionLabel = document.querySelector('[data-session-label]');
+      if (sessionLabel) sessionLabel.textContent = `PAUSED · ${sessionLabel.dataset.topic || 'General study'}`;
+      update();
+
+      const url = `/sessions/${encodeURIComponent(sessionId)}/auto-pause`;
+      const payload = new URLSearchParams({ paused_at: pausedAt });
+      if (!navigator.sendBeacon?.(url, payload)) {
+        fetch(url, { method: 'POST', body: payload, credentials: 'same-origin', keepalive: true }).catch(() => {});
+      }
+    };
     update();
     setInterval(update, 1000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) autoPause();
+      else if (Date.now() - lastTimerTick > 5000) autoPause(new Date(lastTimerTick));
+    });
+    window.addEventListener('pagehide', autoPause);
   }
 
   const dateInput = document.querySelector('input[name="test_date"]');

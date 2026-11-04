@@ -45,12 +45,14 @@ def create_app(config_object=Config):
         started_at = None
         paused_at = None
         total_paused_seconds = 0
+        active_session_id = None
         if current_user.is_authenticated:
             active_session = (StudySession.query
                               .filter_by(user_id=current_user.id, ended_at=None)
                               .order_by(StudySession.started_at.desc())
                               .first())
             if active_session:
+                active_session_id = active_session.id
                 started_at = active_session.started_at
                 if started_at.tzinfo is None:
                     started_at = started_at.replace(tzinfo=timezone.utc)
@@ -62,6 +64,7 @@ def create_app(config_object=Config):
                 total_paused_seconds = active_session.total_paused_seconds or 0
         return {
             "active_study_started_at": started_at.isoformat() if started_at else "",
+            "active_study_id": active_session_id or "",
             "active_study_paused_at": paused_at.isoformat() if paused_at else "",
             "active_study_paused_seconds": total_paused_seconds,
         }
@@ -381,6 +384,27 @@ def create_app(config_object=Config):
             flash("Study timer paused.", "success")
         db.session.commit()
         return redirect(url_for("dashboard"))
+
+    @app.post("/sessions/<int:session_id>/auto-pause")
+    @login_required
+    def auto_pause_session(session_id):
+        item = db.get_or_404(StudySession, session_id)
+        if item.user_id != current_user.id or item.ended_at is not None:
+            abort(404)
+        if item.paused_at is None:
+            now = datetime.now(timezone.utc)
+            requested_pause = request.form.get("paused_at", "")
+            try:
+                paused_at = datetime.fromisoformat(requested_pause.replace("Z", "+00:00")) if requested_pause else now
+                if paused_at.tzinfo is None:
+                    paused_at = paused_at.replace(tzinfo=timezone.utc)
+                else:
+                    paused_at = paused_at.astimezone(timezone.utc)
+                item.paused_at = min(max(paused_at, item.started_at.replace(tzinfo=timezone.utc) if item.started_at.tzinfo is None else item.started_at.astimezone(timezone.utc)), now)
+            except (ValueError, OverflowError):
+                item.paused_at = now
+            db.session.commit()
+        return "", 204
 
     @app.post("/sessions/<int:session_id>/delete")
     @login_required
