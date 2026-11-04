@@ -86,6 +86,44 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(url, { method: 'POST', body: payload, credentials: 'same-origin', keepalive: true }).catch(() => {});
       }
     };
+    const sleepButton = document.querySelector('[data-enable-sleep-detection]');
+    const sleepStatus = document.querySelector('[data-sleep-detection-status]');
+    let idleDetectorStarted = false;
+    const startSleepDetection = async requestPermission => {
+      if (!('IdleDetector' in window)) {
+        if (sleepStatus) sleepStatus.textContent = 'This browser does not support screen-lock detection. The timer can still use its sleep-time fallback.';
+        return;
+      }
+      try {
+        if (requestPermission) {
+          const permission = await IdleDetector.requestPermission();
+          if (permission !== 'granted') {
+            if (sleepStatus) sleepStatus.textContent = 'Sleep detection permission was not granted.';
+            return;
+          }
+          localStorage.setItem('prepwiseSleepDetectionEnabled', 'true');
+        } else {
+          const permission = await navigator.permissions.query({ name: 'idle-detection' });
+          if (permission.state !== 'granted') return;
+        }
+        if (idleDetectorStarted) return;
+        const detector = new IdleDetector();
+        detector.addEventListener('change', () => {
+          if (detector.screenState === 'locked') autoPause(new Date(lastWallTick));
+        });
+        await detector.start({ threshold: 60000 });
+        idleDetectorStarted = true;
+        if (sleepButton) {
+          sleepButton.textContent = 'Sleep detection enabled';
+          sleepButton.disabled = true;
+        }
+        if (sleepStatus) sleepStatus.textContent = 'Prepwise will pause the timer when your screen locks. It will not pause when you switch tabs.';
+      } catch {
+        if (sleepStatus) sleepStatus.textContent = 'Could not start screen-lock detection. Check the browser permission and try again.';
+      }
+    };
+    sleepButton?.addEventListener('click', () => startSleepDetection(true));
+    if (localStorage.getItem('prepwiseSleepDetectionEnabled') === 'true') startSleepDetection(false);
     update();
     setInterval(update, 1000);
   }
