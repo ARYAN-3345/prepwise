@@ -560,6 +560,19 @@ def create_app(config_object=Config):
         db.session.commit()
         return redirect(url_for("mistakes_page"))
 
+    @app.post("/mistakes/<int:mistake_id>/delete")
+    @login_required
+    def delete_mistake(mistake_id):
+        item = db.get_or_404(Mistake, mistake_id)
+        if item.user_id != current_user.id:
+            abort(404)
+        for image in item.images:
+            delete_upload(image.storage_key)
+        db.session.delete(item)
+        db.session.commit()
+        flash("Mistake deleted.", "success")
+        return redirect(url_for("mistakes_page") + "#mistake-list")
+
     @app.route("/resources", methods=["GET", "POST"])
     def resources_page():
         active_topics = topics()

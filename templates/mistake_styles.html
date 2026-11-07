@@ -18,4 +18,23 @@
 .image-paste-zone:focus{outline:2px solid #7357df;outline-offset:2px}
 .image-paste-zone.is-dragging{border-color:#7357df;background:#f2efff}
 .image-paste-status{grid-column:1/-1;font-size:10px;margin:0}
+.upload-label{grid-column:1/-1}
+.image-upload-zone{margin-top:7px;min-height:112px;padding:17px;border:1px dashed #d9d5ec;border-radius:10px;background:#faf9ff;display:flex;flex-wrap:wrap;align-items:center;gap:10px;transition:border-color .15s,background .15s}
+.image-upload-zone:focus,.image-upload-zone.is-dragging{outline:none;border-color:#7357df;background:#f4f1ff}
+.image-file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.upload-pick{white-space:nowrap}
+.upload-guidance{font-size:11px;color:var(--muted)}
+.image-upload-zone small{width:100%;font-size:10px}
+.mistake-list{gap:14px}
+.mistake-card{padding:20px 22px}
+.mistake-card h3{font-size:16px;line-height:1.5;margin:14px 0 12px}
+.mistake-card p{line-height:1.65;margin:8px 0}
+.mistake-card p strong{color:var(--ink)}
+.mistake-top{gap:12px;flex-wrap:wrap}
+.mistake-top .muted{font-size:10px}
+.mistake-images{margin:14px 0}
+.mistake-actions{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.mistake-actions form{margin:0}
+.mistake-actions .btn{font-size:11px}
+@media(max-width:560px){.mistake-card{padding:16px}.image-upload-zone{align-items:flex-start;flex-direction:column}}
 </style>

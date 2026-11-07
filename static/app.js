@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
 
   document.querySelectorAll('input[type="file"][data-size-limit]').forEach(input => {
-    const feedback = input.parentElement.querySelector('[data-file-size-error]');
+    const feedback = input.closest('label')?.querySelector('[data-file-size-error]') || input.parentElement.querySelector('[data-file-size-error]');
     const limit = Number(input.dataset.sizeLimit);
     const validateSize = () => {
       const total = [...input.files].reduce((sum, file) => sum + file.size, 0);
@@ -229,6 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const mistakeForm = imageInput?.form;
   const pasteZone = document.querySelector('[data-image-paste-zone]');
   const pasteStatus = document.querySelector('[data-image-paste-status]');
+  document.querySelectorAll('[data-confirm-delete]').forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!window.confirm(form.dataset.confirmDelete)) event.preventDefault();
+    });
+  });
   if (imageInput && preview && mistakeForm) {
     const renderImagePreview = () => {
       preview.querySelectorAll('img').forEach(image => URL.revokeObjectURL(image.src));
@@ -241,6 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         image.title = file.name;
         preview.append(image);
       });
+      if (pasteStatus) {
+        const count = imageInput.files.length;
+        pasteStatus.textContent = count ? `${count} image${count === 1 ? '' : 's'} ready to add.` : 'No screenshots added yet.';
+      }
     };
     imageInput.addEventListener('change', renderImagePreview);
 
@@ -256,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         imageInput.files = transfer.files;
         imageInput.dispatchEvent(new Event('change', { bubbles: true }));
-        if (pasteStatus) pasteStatus.textContent = `${supported.length} screenshot${supported.length === 1 ? '' : 's'} added. Check the preview, then save your mistake.`;
+        if (pasteStatus) pasteStatus.textContent = `${imageInput.files.length} image${imageInput.files.length === 1 ? '' : 's'} ready to add.`;
       } catch {
         if (pasteStatus) pasteStatus.textContent = 'This browser could not attach the pasted screenshot. Use Choose File to select a saved image instead.';
       }
@@ -273,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (pasteZone) {
-      pasteZone.addEventListener('click', () => pasteZone.focus());
+      pasteZone.querySelector('[data-choose-images]')?.addEventListener('click', () => imageInput.click());
       pasteZone.addEventListener('dragover', event => {
         event.preventDefault();
         pasteZone.classList.add('is-dragging');
