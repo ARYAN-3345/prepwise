@@ -238,13 +238,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderImagePreview = () => {
       preview.querySelectorAll('img').forEach(image => URL.revokeObjectURL(image.src));
       preview.replaceChildren();
-      [...imageInput.files].forEach(file => {
+      [...imageInput.files].forEach((file, index) => {
         if (!file.type.startsWith('image/')) return;
+        const item = document.createElement('div');
+        item.className = 'image-preview-item';
         const image = document.createElement('img');
         image.src = URL.createObjectURL(file);
         image.alt = file.name;
         image.title = file.name;
-        preview.append(image);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'image-preview-remove';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', `Remove ${file.name}`);
+        remove.dataset.removeImage = String(index);
+        item.append(image, remove);
+        preview.append(item);
       });
       if (pasteStatus) {
         const count = imageInput.files.length;
@@ -252,6 +261,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     imageInput.addEventListener('change', renderImagePreview);
+    preview.addEventListener('click', event => {
+      const remove = event.target.closest('[data-remove-image]');
+      if (!remove) return;
+      const indexToRemove = Number(remove.dataset.removeImage);
+      const transfer = new DataTransfer();
+      [...imageInput.files].forEach((file, index) => {
+        if (index !== indexToRemove) transfer.items.add(file);
+      });
+      imageInput.files = transfer.files;
+      imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     const addPastedImages = files => {
       const supported = files.filter(file => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type));
