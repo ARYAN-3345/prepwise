@@ -226,6 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const imageInput = document.querySelector('input[name="images"]');
   const preview = document.querySelector('[data-image-preview]');
+  const lightbox = document.querySelector('[data-image-lightbox]');
+  const lightboxImage = document.querySelector('[data-lightbox-image]');
   const mistakeForm = imageInput?.form;
   const pasteZone = document.querySelector('[data-image-paste-zone]');
   const pasteStatus = document.querySelector('[data-image-paste-status]');
@@ -242,6 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!file.type.startsWith('image/')) return;
         const item = document.createElement('div');
         item.className = 'image-preview-item';
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'image-preview-open';
+        open.setAttribute('aria-label', `Preview ${file.name}`);
         const image = document.createElement('img');
         image.src = URL.createObjectURL(file);
         image.alt = file.name;
@@ -252,7 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         remove.textContent = '×';
         remove.setAttribute('aria-label', `Remove ${file.name}`);
         remove.dataset.removeImage = String(index);
-        item.append(image, remove);
+        open.append(image);
+        item.append(open, remove);
         preview.append(item);
       });
       if (pasteStatus) {
@@ -263,15 +270,28 @@ document.addEventListener('DOMContentLoaded', () => {
     imageInput.addEventListener('change', renderImagePreview);
     preview.addEventListener('click', event => {
       const remove = event.target.closest('[data-remove-image]');
-      if (!remove) return;
-      const indexToRemove = Number(remove.dataset.removeImage);
-      const transfer = new DataTransfer();
-      [...imageInput.files].forEach((file, index) => {
-        if (index !== indexToRemove) transfer.items.add(file);
-      });
-      imageInput.files = transfer.files;
-      imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+      if (remove) {
+        const indexToRemove = Number(remove.dataset.removeImage);
+        const transfer = new DataTransfer();
+        [...imageInput.files].forEach((file, index) => {
+          if (index !== indexToRemove) transfer.items.add(file);
+        });
+        imageInput.files = transfer.files;
+        imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+      const open = event.target.closest('.image-preview-open');
+      const image = open?.querySelector('img');
+      if (image && lightbox && lightboxImage) {
+        lightboxImage.src = image.src;
+        lightbox.showModal();
+      }
     });
+    lightbox?.querySelector('[data-lightbox-close]')?.addEventListener('click', () => lightbox.close());
+    lightbox?.addEventListener('click', event => {
+      if (event.target === lightbox) lightbox.close();
+    });
+    lightbox?.addEventListener('close', () => { if (lightboxImage) lightboxImage.removeAttribute('src'); });
 
     const addPastedImages = files => {
       const supported = files.filter(file => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type));
