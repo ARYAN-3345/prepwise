@@ -240,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderImagePreview = () => {
       preview.querySelectorAll('img').forEach(image => URL.revokeObjectURL(image.src));
       preview.replaceChildren();
+      pasteZone?.classList.toggle('has-preview', imageInput.files.length > 0);
       [...imageInput.files].forEach((file, index) => {
         if (!file.type.startsWith('image/')) return;
         const item = document.createElement('div');
