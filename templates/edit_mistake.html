@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block content %}{% include 'mistake_styles.html' %}
+<div class="page-heading"><div><div class="eyebrow">MISTAKE BOOK</div><h1>Edit mistake</h1><p class="muted">Update your notes and save the changes.</p></div></div>
+<section class="panel form-panel">
+  <form method="post" class="mistake-form-grid">
+    <div class="form-row">
+      <label>Question or concept<textarea class="form-control" name="question" rows="3" required>{{ mistake.question }}</textarea></label>
+      <label>Topic<select class="form-select" name="topic_id"><option value="">General</option>{% for t in topics %}<option value="{{ t.id }}" {% if mistake.topic_id == t.id %}selected{% endif %}>{{ t.subject }} - {{ t.name }}</option>{% endfor %}</select></label>
+    </div>
+    <div class="form-row">
+      <label>Why did I get it wrong?<textarea class="form-control" name="why_wrong" rows="3" required>{{ mistake.why_wrong }}</textarea></label>
+      <label>Takeaway<textarea class="form-control" name="takeaway" rows="3" placeholder="What will I remember next time?">{{ mistake.takeaway or '' }}</textarea></label>
+    </div>
+    {% if mistake.images %}<div class="edit-existing-images"><span class="muted">Attached images stay with this mistake.</span><div class="mistake-images">{% for image in mistake.images %}<a href="{{ url_for('mistake_image', image_id=image.id) }}" target="_blank" rel="noopener"><img src="{{ url_for('mistake_image', image_id=image.id) }}" alt="Mistake image: {{ image.original_filename }}" loading="lazy"></a>{% endfor %}</div></div>{% endif %}
+    <div class="edit-mistake-actions"><a class="btn btn-outline-secondary" href="{{ url_for('mistakes_page') }}#mistake-list">Cancel</a><button class="btn btn-primary" type="submit">Save changes</button></div>
+  </form>
+</section>
+{% endblock %}

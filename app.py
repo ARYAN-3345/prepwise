@@ -560,6 +560,31 @@ def create_app(config_object=Config):
         db.session.commit()
         return redirect(url_for("mistakes_page"))
 
+    @app.route("/mistakes/<int:mistake_id>/edit", methods=["GET", "POST"])
+    @login_required
+    def edit_mistake(mistake_id):
+        item = db.get_or_404(Mistake, mistake_id)
+        if item.user_id != current_user.id:
+            abort(404)
+        if request.method == "POST":
+            question = request.form.get("question", "").strip()
+            why_wrong = request.form.get("why_wrong", "").strip()
+            topic_id = request.form.get("topic_id", type=int)
+            topic = db.session.get(Topic, topic_id) if topic_id else None
+            if not question or not why_wrong:
+                flash("Question and what went wrong are required.", "danger")
+            elif topic_id and topic is None:
+                abort(400)
+            else:
+                item.question = question
+                item.why_wrong = why_wrong
+                item.takeaway = request.form.get("takeaway", "").strip()
+                item.topic = topic
+                db.session.commit()
+                flash("Mistake updated.", "success")
+                return redirect(url_for("mistakes_page") + "#mistake-list")
+        return render_template("edit_mistake.html", mistake=item, topics=topics())
+
     @app.post("/mistakes/<int:mistake_id>/delete")
     @login_required
     def delete_mistake(mistake_id):

@@ -27,6 +27,9 @@
 .image-upload-zone small{width:100%;font-size:10px}
 .mistake-list{gap:14px}
 .mistake-card{padding:20px 22px}
+.mistake-card{position:relative;padding-top:44px}
+.mistake-edit-link{position:absolute;top:15px;right:18px;display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;color:var(--purple);font-size:11px;font-weight:600;text-decoration:none;background:#fff}
+.mistake-edit-link:hover,.mistake-edit-link:focus{background:#f6f4ff;border-color:#ddd6fb;color:#6246ce}
 .mistake-card h3{font-size:16px;line-height:1.5;margin:14px 0 12px}
 .mistake-card p{line-height:1.65;margin:8px 0}
 .mistake-card p strong{color:var(--ink)}
@@ -36,5 +39,8 @@
 .mistake-actions{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .mistake-actions form{margin:0}
 .mistake-actions .btn{font-size:11px}
+.edit-existing-images,.edit-mistake-actions{grid-column:1/-1}
+.edit-existing-images{display:grid;gap:9px}
+.edit-mistake-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:14px;border-top:1px solid var(--line)}
 @media(max-width:560px){.mistake-card{padding:16px}.image-upload-zone{align-items:flex-start;flex-direction:column}}
 </style>
