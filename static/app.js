@@ -18,6 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
     updateThemeToggle();
   });
 
+  const profileForm = document.querySelector('[data-profile-form]');
+  if (profileForm) {
+    const editButton = document.querySelector('[data-profile-edit]');
+    const editActions = profileForm.querySelector('[data-profile-actions]');
+    const setProfileEditing = editing => {
+      profileForm.querySelectorAll('[data-profile-field]').forEach(field => {
+        if (field.tagName === 'SELECT') field.disabled = !editing;
+        else field.readOnly = !editing;
+      });
+      editButton.hidden = editing;
+      editActions.hidden = !editing;
+    };
+    editButton.addEventListener('click', () => setProfileEditing(true));
+    profileForm.querySelector('[data-profile-cancel]').addEventListener('click', () => {
+      profileForm.reset();
+      setProfileEditing(false);
+    });
+  }
+
   const tourCard = document.querySelector('[data-tour-card]');
   const tourBackdrop = document.querySelector('[data-tour-backdrop]');
   if (tourCard && tourBackdrop) {

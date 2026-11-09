@@ -70,3 +70,5 @@ body.tour-active .topbar{position:relative;z-index:1001}
 
 .exam-countdown{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 18px;padding:20px 24px;background:linear-gradient(110deg,#f3efff,#fff);border:1px solid #e9e3ff;border-radius:12px}.exam-countdown h2{font-size:20px;margin:7px 0 3px}.exam-countdown h2 strong{font:800 30px Manrope,sans-serif;color:var(--purple)}.exam-countdown p{font-size:11px;color:var(--muted);margin:0}.exam-countdown-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:#e9e3ff;color:var(--purple);font-size:23px}.active-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.active-actions form{min-width:0}.active-actions .btn{white-space:nowrap}
 @media(max-width:720px){.exam-countdown{padding:16px}.exam-countdown h2{font-size:17px}.exam-countdown h2 strong{font-size:26px}.active-actions{grid-template-columns:1fr 1fr}}
+.profile-edit-actions{display:flex;justify-content:flex-end;gap:9px}
+.profile-edit-actions[hidden],[data-profile-edit][hidden]{display:none!important}

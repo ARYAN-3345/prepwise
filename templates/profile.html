@@ -13,17 +13,17 @@
     <span class="tag">GATE DA aspirant</span>
   </section>
   <section class="panel profile-form-panel">
-    <div class="panel-heading"><div><h2>Basic information</h2><p>Your email is used for sign-in and can’t be changed here.</p></div></div>
-    <form method="post" class="form-stack">
-      <label>Full name<input class="form-control" name="name" value="{{ current_user.name }}" required maxlength="80" autocomplete="name"></label>
+    <div class="panel-heading"><div><h2>Basic information</h2><p>Your email is used for sign-in and can’t be changed here.</p></div><button class="btn btn-outline-secondary" type="button" data-profile-edit>Edit</button></div>
+    <form method="post" class="form-stack" data-profile-form>
+      <label>Full name<input class="form-control" name="name" value="{{ current_user.name }}" required maxlength="80" autocomplete="name" data-profile-field readonly></label>
       <label>Email address<input class="form-control" value="{{ current_user.email }}" readonly></label>
       <div class="form-row">
-        <label>GATE DA exam year<select class="form-select" name="exam_year"><option value="">Choose year</option>{% for year in range(2026, 2041) %}<option value="{{ year }}" {% if current_user.exam_year == year %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></label>
-        <label>Daily study goal (hours)<input class="form-control" type="number" name="daily_goal_hours" min="0.5" max="16" step="0.5" value="{{ current_user.daily_goal_minutes / 60 }}" required></label>
+        <label>GATE DA exam year<select class="form-select" name="exam_year" data-profile-field disabled><option value="">Choose year</option>{% for year in range(2026, 2041) %}<option value="{{ year }}" {% if current_user.exam_year == year %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></label>
+        <label>Daily study goal (hours)<input class="form-control" type="number" name="daily_goal_hours" min="0.5" max="16" step="0.5" value="{{ current_user.daily_goal_minutes / 60 }}" required data-profile-field readonly></label>
       </div>
-      <label><span>College or institution <span class="muted">(optional)</span></span><input class="form-control" name="college" value="{{ current_user.college }}" maxlength="160" autocomplete="organization"></label>
-      <label><span>Course or current study <span class="muted">(optional)</span></span><input class="form-control" name="course" value="{{ current_user.course }}" maxlength="120" placeholder="e.g. B.Tech Computer Science"></label>
-      <button class="btn btn-primary">Save profile</button>
+      <label><span>College or institution <span class="muted">(optional)</span></span><input class="form-control" name="college" value="{{ current_user.college }}" maxlength="160" autocomplete="organization" data-profile-field readonly></label>
+      <label><span>Course or current study <span class="muted">(optional)</span></span><input class="form-control" name="course" value="{{ current_user.course }}" maxlength="120" placeholder="e.g. B.Tech Computer Science" data-profile-field readonly></label>
+      <div class="profile-edit-actions" data-profile-actions hidden><button class="btn btn-outline-secondary" type="button" data-profile-cancel>Cancel</button><button class="btn btn-primary" type="submit">Save profile</button></div>
     </form>
   </section>
 </div>
