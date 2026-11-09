@@ -30,6 +30,8 @@ html[data-theme="dark"] .table>:not(caption)>*>*{background-color:var(--surface)
 html[data-theme="dark"] .table th{color:#b0b5c5}
 html[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>*{--bs-table-bg-type:#20232d}
 html[data-theme="dark"] .resource-file{background:#422a2d;color:#ffaaa4}
+html[data-theme="dark"] .exam-countdown{background:linear-gradient(110deg,#27223b,#1b1e27);border-color:#40375d}
+html[data-theme="dark"] .exam-countdown-mark{background:#342b50;color:#c0b2ff}
 html[data-theme="dark"] .btn-google{background:#20232d;border-color:#444957;color:#f1f2f6!important}
 html[data-theme="dark"] .btn-google:hover{background:#2a2e3a}
 html[data-theme="dark"] .auth-divider:before,html[data-theme="dark"] .auth-divider:after{background:var(--line)}
