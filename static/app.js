@@ -1,4 +1,111 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const themeToggle = document.querySelector('[data-theme-toggle]');
+  const updateThemeToggle = () => {
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    if (themeToggle) {
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeToggle.title = `Switch to ${isDark ? 'light' : 'dark'} theme`;
+      themeToggle.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} theme`);
+      themeToggle.querySelector('[data-theme-label]').textContent = isDark ? 'Light theme' : 'Dark theme';
+      themeToggle.querySelector('.theme-toggle-icon').textContent = isDark ? '☀' : '☾';
+    }
+  };
+  updateThemeToggle();
+  themeToggle?.addEventListener('click', () => {
+    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    try { localStorage.setItem('prepwiseTheme', nextTheme); } catch { /* Keep theme for this page even if storage is blocked. */ }
+    updateThemeToggle();
+  });
+
+  const tourCard = document.querySelector('[data-tour-card]');
+  const tourBackdrop = document.querySelector('[data-tour-backdrop]');
+  if (tourCard && tourBackdrop) {
+    const tourSteps = [
+      ['dashboard', 'Your dashboard', 'See your study progress, weekly focus time, and a quick start for a study session.'],
+      ['syllabus', 'Syllabus tracker', 'Track topics as you study and see how much of the GATE DA syllabus you have completed.'],
+      ['sessions', 'Study sessions', 'Start focused study timers and review your past sessions.'],
+      ['pyqs', 'PYQ / DPP tracker', 'Record your practice attempts and keep track of your accuracy.'],
+      ['mocks', 'Mock tests', 'Save mock test scores and follow your performance over time.'],
+      ['mistakes', 'Mistake book', 'Save questions you got wrong, add screenshots, and revisit them until they are done.'],
+      ['resources', 'Resource library', 'Browse shared books and subject notes, or contribute useful study material.'],
+      ['theme', 'Choose your theme', 'Switch to dark theme at night or return to light theme whenever you prefer.']
+    ];
+    const tourKey = `prepwiseTourSeen:${document.body.dataset.tourUser || 'guest'}`;
+    const title = tourCard.querySelector('[data-tour-title]');
+    const copy = tourCard.querySelector('[data-tour-copy]');
+    const count = tourCard.querySelector('[data-tour-count]');
+    const progress = tourCard.querySelector('[data-tour-progress]');
+    const back = tourCard.querySelector('[data-tour-back]');
+    const next = tourCard.querySelector('[data-tour-next]');
+    let tourIndex = 0;
+    let highlighted = null;
+    const clearHighlight = () => {
+      highlighted?.classList.remove('tour-highlight');
+      highlighted = null;
+    };
+    const renderTourStep = () => {
+      clearHighlight();
+      const [targetName, heading, description] = tourSteps[tourIndex];
+      const target = targetName === 'theme'
+        ? document.querySelector('[data-theme-toggle]')
+        : document.querySelector(`[data-tour-target="${targetName}"]`);
+      if (target) {
+        target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        target.classList.add('tour-highlight');
+        highlighted = target;
+      }
+      title.textContent = heading;
+      copy.textContent = description;
+      count.textContent = `STEP ${tourIndex + 1} OF ${tourSteps.length}`;
+      progress.style.width = `${((tourIndex + 1) / tourSteps.length) * 100}%`;
+      back.disabled = tourIndex === 0;
+      next.textContent = tourIndex === tourSteps.length - 1 ? 'Finish' : 'Next';
+    };
+    const closeTour = () => {
+      tourCard.hidden = true;
+      tourBackdrop.hidden = true;
+      document.body.classList.remove('tour-active');
+      clearHighlight();
+      try { localStorage.setItem(tourKey, 'true'); } catch { /* Tour still closes if storage is blocked. */ }
+    };
+    const tourAlreadySeen = () => {
+      try { return localStorage.getItem(tourKey) === 'true'; } catch { return true; }
+    };
+    const startTour = () => {
+      tourIndex = 0;
+      tourCard.hidden = false;
+      tourBackdrop.hidden = false;
+      document.body.classList.add('tour-active');
+      renderTourStep();
+      next.focus();
+    };
+    document.querySelector('[data-tour-replay]')?.addEventListener('click', startTour);
+    tourCard.querySelectorAll('[data-tour-skip]').forEach(button => button.addEventListener('click', closeTour));
+    back.addEventListener('click', () => {
+      if (tourIndex > 0) { tourIndex -= 1; renderTourStep(); }
+    });
+    next.addEventListener('click', () => {
+      if (tourIndex < tourSteps.length - 1) { tourIndex += 1; renderTourStep(); }
+      else closeTour();
+    });
+    document.addEventListener('keydown', event => {
+      if (tourCard.hidden) return;
+      if (event.key === 'Escape') { event.preventDefault(); closeTour(); }
+      if (event.key === 'Tab') {
+        const focusable = [...tourCard.querySelectorAll('button:not(:disabled)')];
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+    document.addEventListener('click', event => {
+      if (!tourCard.hidden && event.target.closest('.tour-highlight')) event.preventDefault();
+    });
+    if (!tourAlreadySeen()) window.setTimeout(startTour, 450);
+  }
+
   document.querySelectorAll('[data-password-toggle]').forEach(button => {
     button.addEventListener('click', () => {
       const input = document.getElementById(button.dataset.passwordToggle);
