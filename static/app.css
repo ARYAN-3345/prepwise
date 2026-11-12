@@ -84,3 +84,6 @@ body.tour-active .topbar{position:relative;z-index:1001}
 @media(max-width:720px){.exam-countdown{padding:16px}.exam-countdown h2{font-size:17px}.exam-countdown h2 strong{font-size:26px}.active-actions{grid-template-columns:1fr 1fr}}
 .profile-edit-actions{display:flex;justify-content:flex-end;gap:9px}
 .profile-edit-actions[hidden],[data-profile-edit][hidden]{display:none!important}
+
+
+.channel-link{background:#effbf3;border-color:#ccefd7}.channel-link:hover,.channel-link:focus-visible{background:#e2f8e9;border-color:#a9e4bc}.channel-icon{background:#25d366;color:#fff}.channel-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.channel-icon svg path:last-child{fill:currentColor;stroke:none}html[data-theme="dark"] .channel-link{background:#14291d;border-color:#285438}html[data-theme="dark"] .channel-link:hover,html[data-theme="dark"] .channel-link:focus-visible{background:#1a3927;border-color:#347148}html[data-theme="dark"] .channel-icon{background:#25d366;color:#fff}
